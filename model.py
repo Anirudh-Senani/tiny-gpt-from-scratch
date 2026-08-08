@@ -499,8 +499,11 @@ def cross_entropy_loss(probs, targets):
     correct_token_probs = gather_correct_token_probs(probs, targets)
     return (-np.log(correct_token_probs)).mean()
 
-# Step 66 - derive_dlogits_on_paper (not yet solved)
-# TODO: implement
+# Step 66 - derive_dlogits_on_paper
+def derive_dlogits_on_paper():
+    """Return a string summarizing the derivation of dL/dlogits for mean cross-entropy."""
+    # TODO: return a short written derivation ending in dL/dlogits = (probs - onehot(targets)) / B
+    return """dL/dL = 1; dL/dy = -dL/dL; dL/dtargets = (dL/dL * dL/sum(softmax(logits)))/B; dL/dlogits = (probs - onehot(targets)) / B"""
 
 # Step 67 - compute_dlogits (not yet solved)
 # TODO: implement
