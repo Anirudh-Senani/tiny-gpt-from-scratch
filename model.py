@@ -696,8 +696,18 @@ def layernorm_forward_normalize(x, mean, var, eps):
     # TODO: subtract the per-row mean and divide by sqrt(var + eps)
     return (x-mean)/np.sqrt(var + eps)
 
-# Step 87 - layernorm_forward_affine (not yet solved)
-# TODO: implement
+# Step 87 - layernorm_forward_affine
+def layernorm_forward_affine(x, gamma, beta, eps):
+    """Run LayerNorm forward over rows of x with affine params gamma, beta."""
+    # TODO: normalize each row to zero mean / unit variance, then apply gamma and beta.
+    mean = layernorm_forward_mean(x)
+    var = layernorm_forward_variance(x, mean)
+    norm = layernorm_forward_normalize(x, mean, var, eps)
+    y = vector_matrix_broadcast_add(elementwise_multiply(norm, gamma), beta)
+    return dict(
+        y=y,
+        cache=dict(x=x, x_hat=norm, mean=mean, var=var, gamma=gamma, eps=eps)
+    )
 
 # Step 88 - layernorm_backward_subtract_mean (not yet solved)
 # TODO: implement
