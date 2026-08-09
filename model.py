@@ -616,8 +616,11 @@ def linear_backward_dx(dy, cache):
     # TODO: compute the gradient of the loss w.r.t. the linear layer input X given dy and cache
     return dy @ cache['w'].T
 
-# Step 78 - linear_backward_dw (not yet solved)
-# TODO: implement
+# Step 78 - linear_backward_dw
+def linear_backward_dw(dy, cache):
+    """Return dL/dW for a linear layer Y = X @ W."""
+    # TODO: compute the weight gradient using x from cache and the upstream dy
+    return cache['x'].T @ dy
 
 # Step 79 - bias_add_forward (not yet solved)
 # TODO: implement
