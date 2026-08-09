@@ -573,8 +573,19 @@ def train_neural_bigram_loop(w, data, block_size, batch_size, learning_rate, num
         loss_history=loss_history
     )
 
-# Step 73 - sample_from_neural_bigram (not yet solved)
-# TODO: implement
+# Step 73 - sample_from_neural_bigram
+def sample_from_neural_bigram(w, start_id, num_tokens, itos):
+    """Generate a string by repeatedly sampling from softmax of W[id]."""
+    # TODO: starting from start_id, sample num_tokens new ids and decode the full sequence...
+    ids = [start_id]
+    rng = np.random.default_rng()
+    token_id = start_id
+    for step in range(num_tokens):
+        logits = forward_logits_lookup(w, ids)
+        probs = logits_to_probs_rowwise(logits)
+        token_id = sample_next_token(probs, step, rng)
+        ids.append(token_id)
+    return decode_ids(ids, itos)
 
 # Step 74 - linear_forward (not yet solved)
 # TODO: implement
