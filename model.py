@@ -722,8 +722,11 @@ def layernorm_backward_subtract_mean(dy, cache):
     # TODO: compute the gradient contribution of the subtract-mean op
     return dy - (sum_keepdims(dy, axis=-1)/dy.shape[-1])
 
-# Step 89 - layernorm_backward_divide_std (not yet solved)
-# TODO: implement
+# Step 89 - layernorm_backward_divide_std
+def layernorm_backward_divide_std(dy, cache):
+    """Propagate dy through the divide-by-std step of LayerNorm."""
+    # TODO: propagate the upstream gradient through the divide-by-std step of LayerNorm
+    return dy/((cache['var']+cache['eps'])**0.5)
 
 # Step 90 - layernorm_backward_full (not yet solved)
 # TODO: implement
