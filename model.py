@@ -658,8 +658,11 @@ def relu_backward(dy, cache):
     # TODO: return dx with gradient zeroed where the cached input was non-positive.
     return np.where(cache['x']>0.0, dy, 0.0)
 
-# Step 83 - softmax_cross_entropy_backward (not yet solved)
-# TODO: implement
+# Step 83 - softmax_cross_entropy_backward
+def softmax_cross_entropy_backward(probs, targets):
+    """Return dL/dlogits for mean cross-entropy with softmax probs."""
+    # TODO: produce the (B, V) gradient of mean cross-entropy w.r.t. logits.
+    return compute_dlogits(probs, targets)
 
 # Step 84 - layernorm_forward_mean (not yet solved)
 # TODO: implement
