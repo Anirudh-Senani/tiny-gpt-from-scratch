@@ -845,8 +845,13 @@ def compute_value(x, w_v):
     # TODO: project x of shape (B, T, d_model) by w_v of shape (d_model, d_head)
     return x @ w_v
 
-# Step 103 - compute_attention_scores (not yet solved)
-# TODO: implement
+# Step 103 - compute_attention_scores
+import numpy as np
+
+def compute_attention_scores(q, k):
+    """Return raw attention scores Q @ K^T with shape (B, T, T)."""
+    # TODO: compute raw attention scores Q @ K^T per batch element
+    return q @ np.transpose(k, axes=(0,2,1))
 
 # Step 104 - scale_attention_scores (not yet solved)
 # TODO: implement
