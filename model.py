@@ -1090,8 +1090,14 @@ def get_multihead_output_sequence_length(x_heads_back):
     # TODO: read the sequence-length dimension from x_heads_back's shape
     return x_heads_back.shape[1]
 
-# Step 128 - merge_heads_to_d_model (not yet solved)
-# TODO: implement
+# Step 128 - merge_heads_to_d_model
+import numpy as np
+
+def merge_heads_to_d_model(x_heads_back):
+    """Reshape (B, T, n_heads, d_head) into (B, T, d_model)."""
+    # TODO: collapse the last two axes into a single d_model axis
+    B, T, N, H = x_heads_back.shape
+    return x_heads_back.reshape((B, T, N*H))
 
 # Step 129 - multihead_output_projection_forward (not yet solved)
 # TODO: implement
