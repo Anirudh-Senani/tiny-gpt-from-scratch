@@ -853,8 +853,13 @@ def compute_attention_scores(q, k):
     # TODO: compute raw attention scores Q @ K^T per batch element
     return q @ np.transpose(k, axes=(0,2,1))
 
-# Step 104 - scale_attention_scores (not yet solved)
-# TODO: implement
+# Step 104 - scale_attention_scores
+import numpy as np
+
+def scale_attention_scores(scores, d_head):
+    """Rescale (B, T, T) attention scores by a function of d_head."""
+    # TODO: rescale the scores so their variance does not grow with d_head.
+    return scores/(d_head**0.5)
 
 # Step 105 - build_causal_mask (not yet solved)
 # TODO: implement
