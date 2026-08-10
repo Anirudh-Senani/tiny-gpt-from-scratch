@@ -1196,8 +1196,15 @@ def residual_backward(d_y):
     # TODO: route the upstream gradient to both branches of the residual add.
     return d_y.copy(), d_y
 
-# Step 137 - pre_layernorm_sublayer_forward (not yet solved)
-# TODO: implement
+# Step 137 - pre_layernorm_sublayer_forward
+def pre_layernorm_sublayer_forward(x, ln_params, sublayer_fn, sublayer_params):
+    # TODO: apply LayerNorm to x, run sublayer_fn on the result, then residual-add back to x.
+    pre_norm = layernorm_forward_affine(x, **ln_params, eps=1e-5)
+    sublayer = sublayer_fn(pre_norm['y'], sublayer_params)
+    return dict(
+        y=x+sublayer['y'],
+        cache=dict(x=x,ln_cache=pre_norm['cache'],sublayer_cache=sublayer['cache'])
+    )
 
 # Step 138 - transformer_block_forward (not yet solved)
 # TODO: implement
