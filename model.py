@@ -954,8 +954,21 @@ def scale_scores_backward(d_scaled_scores, d_head):
     # TODO: propagate d_scaled_scores back through the sqrt(d_head) scaling
     return d_scaled_scores/(d_head**0.5)
 
-# Step 114 - qk_scores_backward (not yet solved)
-# TODO: implement
+# Step 114 - qk_scores_backward
+import numpy as np
+
+def qk_scores_backward(d_scores, cache):
+    """Backprop through scores = Q @ K^T.
+
+    d_scores: (B, T, T)
+    cache: dict with 'q' and 'k', each (B, T, d_head)
+    returns: {'d_q': (B, T, d_head), 'd_k': (B, T, d_head)}
+    """
+    # TODO: backprop scores = Q @ K^T to obtain gradients for Q and K
+    return dict(
+        d_q=d_scores @ cache['k'],
+        d_k=d_scores.transpose((0,2,1)) @ cache['q']
+    )
 
 # Step 115 - qkv_projection_backward (not yet solved)
 # TODO: implement
