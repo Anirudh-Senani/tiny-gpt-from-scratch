@@ -1190,8 +1190,11 @@ def residual_forward(x, sublayer_out):
     # TODO: add the sublayer output to its input to form a residual connection.
     return x + sublayer_out
 
-# Step 136 - residual_backward (not yet solved)
-# TODO: implement
+# Step 136 - residual_backward
+def residual_backward(d_y):
+    """Backprop through y = x + sublayer_out. Returns (d_x, d_sublayer_out)."""
+    # TODO: route the upstream gradient to both branches of the residual add.
+    return d_y.copy(), d_y
 
 # Step 137 - pre_layernorm_sublayer_forward (not yet solved)
 # TODO: implement
