@@ -1055,8 +1055,21 @@ def compute_d_head(d_model, n_heads):
         raise ValueError
     return d_model//n_heads
 
-# Step 124 - multihead_masked_softmax_scores (not yet solved)
-# TODO: implement
+# Step 124 - multihead_masked_softmax_scores
+def multihead_masked_softmax_scores(scores, mask):
+    """Apply causal mask and row-wise softmax to multi-head attention scores.
+
+    Args:
+        scores: ndarray of shape (B, n_heads, T, T)
+        mask:   ndarray of shape (T, T), True where positions are kept
+
+    Returns:
+        weights: ndarray of shape (B, n_heads, T, T)
+    """
+    # TODO: mask future positions then row-wise softmax over the last axis
+    masked_scores = scores + np.where(mask, 0.0, -np.inf)[None, None, :, :]
+    exp_scores = np.exp(masked_scores - masked_scores.max(axis=-1, keepdims=True))
+    return exp_scores/exp_scores.sum(axis=-1, keepdims=True)
 
 # Step 125 - multihead_weighted_sum (not yet solved)
 # TODO: implement
