@@ -970,8 +970,15 @@ def qk_scores_backward(d_scores, cache):
         d_k=d_scores.transpose((0,2,1)) @ cache['q']
     )
 
-# Step 115 - qkv_projection_backward (not yet solved)
-# TODO: implement
+# Step 115 - qkv_projection_backward
+def qkv_projection_backward(d_q, d_k, d_v, cache):
+    # TODO: backprop through Q=x@Wq, K=x@Wk, V=x@Wv to get dx and dw_q, dw_k, dw_v.
+    return dict(
+        dx=d_q @ cache['w_q'].T + d_k @ cache['w_k'].T + d_v @ cache['w_v'].T,
+        dw_q = (cache['x'].transpose((0,2,1)) @ d_q).sum(axis=0),
+        dw_k = (cache['x'].transpose((0,2,1)) @ d_k).sum(axis=0),
+        dw_v = (cache['x'].transpose((0,2,1)) @ d_v).sum(axis=0)
+    )
 
 # Step 116 - choose_attention_head_config (not yet solved)
 # TODO: implement
