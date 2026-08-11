@@ -1637,8 +1637,13 @@ def apply_temperature(logits, temperature):
     
     return logits/temperature
 
-# Step 161 - top_k_filter (not yet solved)
-# TODO: implement
+# Step 161 - top_k_filter
+def top_k_filter(logits, k):
+    """Return logits with all but the top-k entries per row set to -inf."""
+    # TODO: keep only the top-k logits per row, replace the rest with -inf.
+    top_inds = np.argsort(-logits)
+    logits[:,top_inds[:,k:]] = -np.inf
+    return logits
 
 # Step 162 - softmax_to_probs (not yet solved)
 # TODO: implement
