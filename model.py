@@ -1475,8 +1475,27 @@ def full_model_backward(d_logits, caches, model_params):
 
     return grads
 
-# Step 147 - initialize_adam_moments (not yet solved)
-# TODO: implement
+# Step 147 - initialize_adam_moments
+import numpy as np
+
+def initialize_adam_moments(model_params):
+    """Allocate zeroed Adam first- and second-moment buffers matching model_params."""
+    # TODO: walk the nested parameter dict and build parallel (m, v) zero buffers
+    m = {}
+    v = {}
+
+    for key in model_params:
+        if isinstance(model_params[key], dict):
+            m[key], v[key] = initialize_adam_moments(model_params[key])
+        elif isinstance(model_params[key], list):
+            moments = [initialize_adam_moments(param) for param in model_params[key]]
+            m[key] = [moment[0] for moment in moments]
+            v[key] = [moment[1] for moment in moments]
+        else:
+            m[key] = np.zeros_like(model_params[key])
+            v[key] = np.zeros_like(model_params[key])
+
+    return m,v
 
 # Step 148 - initialize_adam_step_counter (not yet solved)
 # TODO: implement
