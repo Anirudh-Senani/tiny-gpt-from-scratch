@@ -1313,7 +1313,7 @@ def transformer_block_backward(d_y, cache, block_params):
     grads['ffn'] = ffn_grads
 
     d_x = d_x + d_attn_out
-    print(d_x[0, 1, 2])
+    # print(d_x[0, 1, 2])
 
     return d_x, grads
 
