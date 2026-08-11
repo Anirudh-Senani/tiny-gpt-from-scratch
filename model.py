@@ -1581,8 +1581,25 @@ def wire_full_training_loop(params, train_ids, val_ids, block_size, batch_size, 
 
     return params, history
 
-# Step 155 - logging_and_validation_loss (not yet solved)
-# TODO: implement
+# Step 155 - logging_and_validation_loss
+def logging_and_validation_loss(params, val_ids, block_size, batch_size, n_eval_batches):
+    """Estimate validation cross-entropy loss by averaging over several batches."""
+    # TODO: sample n_eval_batches from val_ids and average the per-batch cross-entropy loss
+    rng = np.random.default_rng()
+
+    avg_loss = 0.0
+    for _ in range(n_eval_batches):
+        x_ids, y = get_batch(val_ids, block_size, batch_size, rng)
+        logits, caches = full_model_forward(x_ids, params)
+        exp_logits = np.exp(logits - logits.max(axis=-1, keepdims=True))
+        softmax_logits = exp_logits/exp_logits.sum(axis=-1, keepdims=True)
+        y_onehot = np.zeros_like(softmax_logits)
+        y_onehot[np.arange(y.shape[0])[:,None], np.arange(y.shape[1])[None,:], y] = 1.0
+
+        loss = np.mean(-(y_onehot * np.log(softmax_logits)).sum(axis=-1))
+        avg_loss += loss
+    
+    return avg_loss/n_eval_batches
 
 # Step 156 - encode_prompt (not yet solved)
 # TODO: implement
