@@ -338,9 +338,7 @@ def stack_y_batch(data, offsets, block_size):
 def get_batch(data, block_size, batch_size, rng):
     # TODO: package one training batch (X, Y) of shape (batch_size, block_size) from data using rng.
     offsets = sample_random_batch_offsets(len(data), block_size, batch_size, rng)
-    x, y = stack_x_batch(data, offsets, block_size), stack_y_batch(data, offsets, block_size)
-    print(y)
-    return x, y
+    return stack_x_batch(data, offsets, block_size), stack_y_batch(data, offsets, block_size)
 
 # Step 45 - allocate_count_matrix
 import numpy as np
@@ -1544,7 +1542,6 @@ def wire_full_training_loop(params, train_ids, val_ids, block_size, batch_size, 
     """Run the full GPT training loop for n_steps and return (updated_params, history)."""
     # TODO: drive sample-batch -> forward -> loss -> backward -> Adam-update for n_steps...
     rng = np.random.default_rng()
-    print(params)
 
     def update_params(params, grads, m, v, t):
         for key in params:
@@ -1552,12 +1549,12 @@ def wire_full_training_loop(params, train_ids, val_ids, block_size, batch_size, 
                 params[key], m[key], v[key] = update_params(params[key], grads[key], m[key], v[key], t)
             elif isinstance(params[key], list):
                 result = [update_params(pi, gi, mi, vi, t) for pi, gi, mi, vi in zip(params[key], grads[key], m[key], v[key])]
-                params[key] = [ri[0] for ri in results]
-                m[key] = [ri[1] for ri in results]
-                v[key] = [ri[2] for ri in results]
+                params[key] = [ri[0] for ri in result]
+                m[key] = [ri[1] for ri in result]
+                v[key] = [ri[2] for ri in result]
             else:
-                m[key] = adam_update_first_moment(m[key], grad[key], betas[0])
-                v[key] = adam_update_second_moment(v[key], grad[key], betas[1])
+                m[key] = adam_update_first_moment(m[key], grads[key], betas[0])
+                v[key] = adam_update_second_moment(v[key], grads[key], betas[1])
                 m_hat, v_hat = adam_bias_correction(m[key], v[key], betas[0], betas[1], t)
                 params[key] = adam_parameter_update(params[key], m_hat, v_hat, lr, eps)
         return params, m, v
@@ -1570,9 +1567,13 @@ def wire_full_training_loop(params, train_ids, val_ids, block_size, batch_size, 
         logits, caches = full_model_forward(x_ids, params)
         exp_logits = np.exp(logits - logits.max(axis=-1, keepdims=True))
         softmax_logits = exp_logits/exp_logits.sum(axis=-1, keepdims=True)
-        loss = np.mean(-(y * np.log(softmax_logits)).sum(axis=-1))
-        d_logits = (softmax_logits - y)/x_ids.shape[0]
+        y_onehot = np.zeros_like(softmax_logits)
+        y_onehot[np.arange(y.shape[0])[:,None], np.arange(y.shape[1])[None,:], y] = 1.0
 
+        loss = np.mean(-(y_onehot * np.log(softmax_logits)).sum(axis=-1))
+        d_logits = (softmax_logits - y_onehot)/(x_ids.shape[0] * x_ids.shape[1])
+
+        caches['emb'] = {'tok_cache' : caches['emb'], 'seq_len' : x_ids.shape[1]}
         grads = full_model_backward(d_logits, caches, params)
         t = adam_increment_step(t)
         params, adam_m, adam_v = update_params(params, grads, adam_m, adam_v, t)
