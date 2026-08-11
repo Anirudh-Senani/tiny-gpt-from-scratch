@@ -1430,8 +1430,50 @@ def full_model_forward(x_ids, model_params):
 
     return lm_head['logits'], cache
 
-# Step 146 - full_model_backward (not yet solved)
-# TODO: implement
+# Step 146 - full_model_backward
+def full_model_backward(d_logits, caches, model_params):
+    """Propagate d_logits back through LM head, final LN, blocks, and embeddings.
+
+    Args:
+        d_logits: (B, T, V) gradient w.r.t. the model output
+        caches: nested dict from full_model_forward with keys
+                'emb', 'blocks', 'ln_f', 'lm_head'
+        model_params: nested dict matching the forward's parameter tree
+
+    Returns:
+        grads: nested dict mirroring model_params with keys
+               'tok_emb', 'pos_emb', 'blocks', 'ln_f': {'gamma', 'beta'},
+               'lm_head': {'w_lm', 'b_lm'}
+    """
+    # TODO: walk the forward chain in reverse, returning a grads tree shaped like model_params
+    grads = {}
+    w_lm = np.einsum("btd,btv->dv", caches['lm_head']['x'], d_logits)
+    b_lm = d_logits.sum(axis=(0,1))
+
+    d_x_lm = d_logits @ caches['lm_head']['w_lm'].T
+    if 'eps' not in caches['ln_f']:
+        caches['ln_f']['eps'] = model_params['ln_f'].get('eps', 1e-5)
+    d_ln_f = layernorm_backward_full(d_x_lm, caches['ln_f'])
+
+    d_emb, grads_list = backward_through_all_blocks(d_ln_f['dx'], caches['blocks'], model_params['blocks'])
+    d_emb_pos = embedding_sum_backward(d_emb)
+
+    # if 'vocab_size' not in caches['emb']:
+    #     # caches['emb']['vocab_size'] = model_params['emb'].get('vocab_size', model_params['vocab_size'])
+    #     caches['emb']['vocab_size'] = model_params.get('vocab_size', model_params['tok_emb'].shape[0])
+    # if 'token_ids' not in caches['emb']:
+    #     caches['emb']['token_ids'] = x_ids
+    d_x = token_embedding_backward(d_emb_pos['d_token_emb'], caches['emb']['tok_cache'])
+    d_pos_emb = np.zeros_like(model_params['pos_emb'])
+    d_pos_emb[:caches['emb']['seq_len']] = d_emb_pos['d_pos_emb']
+
+    grads['tok_emb'] = d_x
+    grads['pos_emb'] = d_pos_emb
+    grads['blocks'] = grads_list
+    grads['ln_f'] = dict(gamma=d_ln_f['dgamma'].sum(axis=0), beta=d_ln_f['dbeta'].sum(axis=0))
+    grads['lm_head'] = dict(w_lm=w_lm,b_lm=b_lm)
+
+    return grads
 
 # Step 147 - initialize_adam_moments (not yet solved)
 # TODO: implement
