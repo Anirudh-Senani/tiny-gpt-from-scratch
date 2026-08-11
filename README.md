@@ -148,8 +148,8 @@ python scaffold.py
 - [x] **136.** residual_backward
 - [x] **137.** pre_layernorm_sublayer_forward
 - [x] **138.** transformer_block_forward
-- [ ] **139.** transformer_block_backward
-- [ ] **140.** stack_transformer_blocks
+- [x] **139.** transformer_block_backward
+- [x] **140.** stack_transformer_blocks
 - [ ] **141.** forward_through_all_blocks
 - [ ] **142.** backward_through_all_blocks
 - [ ] **143.** final_layernorm_forward

@@ -1278,11 +1278,81 @@ def transformer_block_forward(x, block_params):
         cache=dict(attn_branch=attn_out['cache'], ffn_branch=ffn_out['cache'])
     )
 
-# Step 139 - transformer_block_backward (not yet solved)
-# TODO: implement
+# Step 139 - transformer_block_backward
+def transformer_block_backward(d_y, cache, block_params):
+    """Backward pass for a pre-LN Transformer block.
 
-# Step 140 - stack_transformer_blocks (not yet solved)
-# TODO: implement
+    Args:
+        d_y: upstream gradient w.r.t. block output, shape (B, T, D).
+        cache: dict from transformer_block_forward, with keys 'attn_branch' and 'ffn_branch'.
+        block_params: nested dict with keys 'ln1', 'attn', 'ln2', 'ffn'.
+
+    Returns:
+        (d_x, grads) where d_x has shape (B, T, D) and grads is a nested dict
+        with keys 'ln1', 'ln2', 'attn', 'ffn' mirroring block_params.
+    """
+    # Tip: recover x from cache['attn_branch']['x'] and call _complete_block_cache(x, block_params)
+    # to guarantee every field the backward helpers need is present, no matter what the forward saved.
+    # TODO: reverse the FFN branch then the attention branch, summing residual + sublayer gradients
+    x = cache['attn_branch']['x']
+    grads = {}
+    block_cache = _complete_block_cache(x, block_params)
+
+    d_ln2, ffn_grads = _ffn_sublayer_backward(d_y, block_cache['ffn_branch']['sublayer_cache'], block_params['ffn'])
+    d_attn_out, d_gamma_ln2, d_beta_ln2 = layernorm_backward_affine(d_ln2, block_cache['ffn_branch']['ln_cache'])
+
+    d_attn_out = d_attn_out + d_y
+
+    d_ln1, attn_grads = _attn_sublayer_backward(d_attn_out, block_cache['attn_branch']['sublayer_cache'], block_params['attn'])
+    d_x, d_gamma_ln1, d_beta_ln1 = layernorm_backward_affine(d_ln1, block_cache['attn_branch']['ln_cache'])
+
+    grads['ln1'] = {'gamma' : d_gamma_ln1, 'beta' : d_beta_ln1}
+    grads['ln2'] = {'gamma' : d_gamma_ln2, 'beta' : d_beta_ln2}
+    grads['attn'] = attn_grads
+    grads['ffn'] = ffn_grads
+
+    d_x = d_x + d_attn_out
+    print(d_x[0, 1, 2])
+
+    return d_x, grads
+
+# Step 140 - stack_transformer_blocks
+import numpy as np
+
+def stack_transformer_blocks(n_layers, d_model, n_heads, d_ff):
+    """Build a list of n_layers Transformer block parameter dicts.
+
+    Each block dict has keys 'ln1', 'attn', 'ln2', 'ffn'.
+    """
+    # TODO: create n_layers initialized block parameter dicts and return them as a list
+    params_stack = []
+
+    for _ in range(n_layers):
+        params = {}
+        gamma1 = np.ones(d_model)
+        beta1 = np.zeros(d_model)
+
+        attn = create_multihead_qkv_projections(d_model)
+        wo = create_multihead_output_projection(d_model)
+        bo = np.zeros(d_model)
+        attn['Wo']=wo
+        attn['bo']=bo
+
+        gamma2 = np.ones(d_model)
+        beta2 = np.zeros(d_model)
+
+        w1 = scale_w_small(make_2d_random(d_model, d_ff, 0), 0.02)
+        w2 = scale_w_small(make_2d_random(d_ff, d_model, 0), 0.02)
+        b1 = np.zeros(d_ff)
+        b2 = np.zeros(d_model)
+
+        params['ln1'] = dict(gamma=gamma1,beta=beta1)
+        params['attn'] = attn
+        params['ln2'] = dict(gamma=gamma2,beta=beta2)
+        params['ffn'] = dict(W1=w1,b1=b1,W2=w2,b2=b2)
+
+        params_stack.append(params)
+    return params_stack
 
 # Step 141 - forward_through_all_blocks (not yet solved)
 # TODO: implement
