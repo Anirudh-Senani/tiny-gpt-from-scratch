@@ -1609,8 +1609,12 @@ def encode_prompt(prompt, stoi):
     # TODO: convert prompt characters to ids via stoi and reshape to (1, T)
     return np.asarray(encode_string(prompt, stoi))[None, :]
 
-# Step 157 - crop_context_to_block_size (not yet solved)
-# TODO: implement
+# Step 157 - crop_context_to_block_size
+def crop_context_to_block_size(context_ids, block_size):
+    # TODO: keep only the most recent block_size tokens of a (1, T) context
+    clen = context_ids.shape[1]
+    start_ind = max(0, clen-block_size)
+    return context_ids[:,start_ind:]
 
 # Step 158 - forward_to_get_logits (not yet solved)
 # TODO: implement
