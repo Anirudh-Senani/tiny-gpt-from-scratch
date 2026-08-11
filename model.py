@@ -1645,8 +1645,12 @@ def top_k_filter(logits, k):
     logits[:,top_inds[:,k:]] = -np.inf
     return logits
 
-# Step 162 - softmax_to_probs (not yet solved)
-# TODO: implement
+# Step 162 - softmax_to_probs
+def softmax_to_probs(logits):
+    """Convert (1, V) logits into a row-wise probability distribution."""
+    # TODO: apply numerically stable row-wise softmax to the input logits
+    exp_logits = np.exp(logits - logits.max(axis=-1, keepdims=True))
+    return exp_logits/exp_logits.sum(axis=-1, keepdims=True)
 
 # Step 163 - sample_one_token (not yet solved)
 # TODO: implement
