@@ -1227,7 +1227,7 @@ def transformer_block_forward(x, block_params):
         k = x @ attn_params['Wk']
         v = x @ attn_params['Wv']
         d_head = compute_d_head(d_model,attn_params['n_heads'])
-        scale = 1.0/(d_head)
+        scale = 1.0/(d_head**0.5)
 
         q = transpose_heads_to_front(reshape_to_heads(q, attn_params['n_heads'], d_head))
         k = transpose_heads_to_front(reshape_to_heads(k, attn_params['n_heads'], d_head))
@@ -1272,6 +1272,7 @@ def transformer_block_forward(x, block_params):
         )
 
     attn_out = pre_layernorm_sublayer_forward(x, block_params['ln1'], attn_fn, block_params['attn'])
+    # h1 = x+attn_out['y']
     ffn_out = pre_layernorm_sublayer_forward(attn_out['y'], block_params['ln2'], ffn_fn, block_params['ffn'])
     return dict(
         y=ffn_out['y'],
