@@ -1221,9 +1221,58 @@ def transformer_block_forward(x, block_params):
         'attn_branch' and 'ffn_branch'.
     """
     # TODO: compose pre-LN attention sublayer then pre-LN FFN sublayer with residuals
-    print(block_params)
-    attn_out = pre_layernorm_sublayer_forward(x, block_params['ln1'], block_params['attn'], block_params['attn'])
-    ffn_out = pre_layernorm_sublayer_forward(attn_out['y'], block_params['ln2'], block_params['ffn'], block_params['ffn'])
+    B, T, d_model = x.shape
+    def attn_fn(x, attn_params):
+        q = x @ attn_params['Wq']
+        k = x @ attn_params['Wk']
+        v = x @ attn_params['Wv']
+        d_head = compute_d_head(d_model,attn_params['n_heads'])
+        scale = 1.0/(d_head)
+
+        q = transpose_heads_to_front(reshape_to_heads(q, attn_params['n_heads'], d_head))
+        k = transpose_heads_to_front(reshape_to_heads(k, attn_params['n_heads'], d_head))
+        v = transpose_heads_to_front(reshape_to_heads(v, attn_params['n_heads'], d_head))
+        mask = build_causal_mask(T)
+
+        scores = (q @ k.transpose((0,1,3,2)))*scale
+        scores = multihead_masked_softmax_scores(scores, mask)
+        scores = merge_heads_to_d_model(transpose_heads_to_back(multihead_weighted_sum(scores, v)))
+        out = multihead_output_projection_forward(scores, attn_params['Wo'], attn_params['bo'])['out']
+
+        return dict(
+            y=out,
+            cache=dict(
+                x=x,
+                q=q,
+                k=k,
+                v=v,
+                Wq=attn_params['Wq'],
+                Wk=attn_params['Wk'],
+                Wv=attn_params['Wv'],
+                Wo=attn_params['Wo'],
+                merged=scores,
+                mask=mask,
+                scale=scale
+            )
+        )
+
+    def ffn_fn(x, ffn_params):
+        h1 = ffn_linear_one_forward(x, ffn_params['w1'], ffn_params['b1'])['h1']
+        a1 = ffn_activation_forward(h1)[0]
+        out = ffn_linear_two_forward(a1, ffn_params['w2'], ffn_params['b2'])['h2']
+        return dict(
+            y=out,
+            cache=dict(
+                x=x,
+                w1=ffn_params['w1'],
+                h1=h1,
+                a1=a1,
+                w2=ffn_params['w2']
+            )
+        )
+
+    attn_out = pre_layernorm_sublayer_forward(x, block_params['ln1'], attn_fn, block_params['attn'])
+    ffn_out = pre_layernorm_sublayer_forward(attn_out['y'], block_params['ln2'], ffn_fn, block_params['ffn'])
     return dict(
         y=ffn_out['y'],
         cache=dict(attn_branch=attn_out['cache'], ffn_branch=ffn_out['cache'])
